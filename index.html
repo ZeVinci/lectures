@@ -62,6 +62,17 @@ a{color:var(--fav)}
 .cards{display:flex;flex-wrap:wrap;gap:24px}
 .card{flex:1 1 480px;min-width:0;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px}
 .card.full{flex-basis:100%}
+.card.third{flex:1 1 320px}
+.donut{display:flex;flex-direction:column;align-items:center;gap:16px}
+.donut svg{width:200px;height:200px}
+.donut svg path{stroke:var(--surf);stroke-width:2}
+.donut svg path:hover{opacity:.85}
+.dl{width:100%;display:flex;flex-direction:column;gap:6px;font-size:14px}
+.dl div{display:grid;grid-template-columns:12px minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.dl i{width:12px;height:12px;border-radius:3px}
+.dl .c{color:var(--ink2);text-align:right;font-variant-numeric:tabular-nums}
+.dl .p{font-weight:600;text-align:right;min-width:42px;font-variant-numeric:tabular-nums}
+
 .card h2{margin:0;font-family:Literata,Georgia,serif;font-size:21px;font-weight:600}
 .card p.d{margin:4px 0 0;font-size:14px;color:var(--ink2)}
 .chart{padding-left:48px}
@@ -266,7 +277,25 @@ function hbars(items, { labw = 190, val = (v) => fmt(v) } = {}) {
   return '<div class="hb">' + items.map(([l, v, c, extra]) => `<div class="r" style="grid-template-columns:${labw}px minmax(0,1fr)" title="${esc(l)} : ${esc(val(v))}${esc(extra || '')}">
     <div class="l">${esc(l)}</div><div class="bw"><div class="bar" style="width:${Math.max(v / mx * 100, .8).toFixed(1)}%;background:${c || 'var(--bar)'}"></div><span class="n">${val(v)}${esc(extra || '')}</span></div></div>`).join('') + '</div>';
 }
-const card = (title, desc, body, full) => `<section class="card${full ? ' full' : ''}"><div><h2>${title}</h2><p class="d">${desc}</p></div>${body}</section>`;
+function donut(items, unit = 'livres') {
+  items = items.filter(([, v]) => v > 0);
+  const tot = items.reduce((s, [, v]) => s + v, 0), R = 100, r = 62, c = 100;
+  let a0 = -Math.PI / 2, paths = '';
+  const pt = (a, rr) => `${(c + rr * Math.cos(a)).toFixed(2)},${(c + rr * Math.sin(a)).toFixed(2)}`;
+  items.forEach(([n, v, col]) => {
+    const a1 = a0 + v / tot * 2 * Math.PI, big = a1 - a0 > Math.PI ? 1 : 0;
+    const d = items.length === 1
+      ? `M${pt(-Math.PI / 2, R)}A${R},${R} 0 1 1 ${pt(Math.PI * 1.4999, R)}L${pt(Math.PI * 1.4999, r)}A${r},${r} 0 1 0 ${pt(-Math.PI / 2, r)}Z`
+      : `M${pt(a0, R)}A${R},${R} 0 ${big} 1 ${pt(a1, R)}L${pt(a1, r)}A${r},${r} 0 ${big} 0 ${pt(a0, r)}Z`;
+    paths += `<path d="${d}" fill="${col}"><title>${esc(n)} : ${v} ${unit} (${Math.round(100 * v / tot)} %)</title></path>`;
+    a0 = a1;
+  });
+  const centre = `<text x="100" y="98" text-anchor="middle" font-size="30" font-weight="600" fill="#1E1B17" font-family="Literata, Georgia, serif">${tot}</text><text x="100" y="120" text-anchor="middle" font-size="13" fill="#5E574D">${unit}</text>`;
+  const pct = (v) => { const p = 100 * v / tot; return p < 1 ? '< 1 %' : Math.round(p) + ' %'; };
+  const list = items.map(([n, v, col]) => `<div><i style="background:${col}"></i><span>${esc(n)}</span><span class="c">${v}</span><span class="p">${pct(v)}</span></div>`).join('');
+  return `<div class="donut"><svg viewBox="0 0 200 200" role="img" aria-label="${esc(items.map(([n, v]) => `${n} ${pct(v)}`).join(', '))}">${paths}${centre}</svg><div class="dl">${list}</div></div>`;
+}
+const card = (title, desc, body, full) => `<section class="card${full === true ? ' full' : full ? ' ' + full : ''}"><div><h2>${title}</h2><p class="d">${desc}</p></div>${body}</section>`;
 const lum = (hex) => { const f = (c) => (c /= 255) <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; const n = parseInt(hex.slice(1), 16); return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); };
 
 // ---------- stats ----------
@@ -307,6 +336,14 @@ function renderStats() {
   cards.push(card('Livres par an', `${y0} commence en ${MOL[first.mois - 1]} et ${y1} s’arrête en ${MOL[lastB.mois - 1]}.`, vbars(YL, nb, { tip: (l, v) => `${l} : ${v} livres` })));
   cards.push(card('Pages par an', 'Nombre de pages approximatif, d’après une édition courante.', vbars(YL, pg, { tip: (l, v) => `${l} : ≈ ${fmt(v)} pages` })));
 
+
+  // pies
+  const LANGCOL = { 'français': '#3E3A34', 'anglais': '#9C9282', 'italien': '#D9CFBE', 'allemand': '#5B7F86' };
+  const langPie = [...count(B, (b) => b.langue_lue).entries()].sort((a, b) => b[1] - a[1]).map(([l, v]) => [l[0].toUpperCase() + l.slice(1), v, LANGCOL[l] || '#8A8F91']);
+  const catPie = (list) => { const m = count(list, (b) => GROUP_OF[b.categorie]); return GROUPS.map(([g, c]) => [g, m.get(g) || 0, c]); };
+  cards.push(card('Langues de lecture', 'Sur l’ensemble des livres.', donut(langPie), 'third'));
+  cards.push(card('Catégories', 'Sur l’ensemble des livres.', donut(catPie(B)), 'third'));
+  cards.push(card('Catégories des coups de cœur', `Sur les ${favs.length} coups de cœur.`, donut(catPie(favs), 'coups de cœur'), 'third'));
   // cumulative
   const sorted = [...B].sort((a, b) => a.annee - b.annee || a.mois - b.mois || a.id - b.id);
   const months = []; for (let y = y0; y <= y1; y++) for (let m = 1; m <= 12; m++) { if ((y === y0 && m < first.mois) || (y === y1 && m > lastB.mois)) continue; months.push([y, m]); }
