@@ -33,6 +33,33 @@ a{color:var(--fav)}
 .favbtn{cursor:pointer;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:14px;font-weight:500;padding:10px 16px;border-radius:999px;border:1px solid #C9BFAE;background:var(--surf);color:var(--ink)}
 .favbtn[aria-pressed="true"]{background:var(--fav);border-color:var(--fav);color:#fff}
 .heart{width:15px;height:15px;flex:0 0 15px}
+.filters{display:flex;flex-direction:column;gap:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{cursor:pointer;display:inline-flex;align-items:center;gap:7px;font:inherit;font-size:13px;padding:7px 12px;border-radius:999px;border:1px solid #D5CBBA;background:var(--surf);color:#3E3A34}
+.chip i{width:10px;height:10px;border-radius:3px;display:inline-block}
+.chip[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:#fff}
+.chip:focus-visible,.favbtn:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.count{margin:0;font-size:14px;color:var(--ink2);min-height:1em}
+/* carnet */
+.cyear{display:flex;flex-wrap:wrap;gap:32px}
+.cside{flex:0 0 200px;display:flex;flex-direction:column;gap:12px}
+.cy{font-family:Literata,Georgia,serif;font-size:72px;line-height:.9;color:var(--fav)}
+.cmeta{font-size:14px;color:#4A453E;line-height:1.6}
+.cmix{display:flex;gap:2px;height:8px;border-radius:4px;overflow:hidden}
+.cbody{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:22px}
+.mh{font-size:12px;letter-spacing:2px;text-transform:uppercase;color:var(--mut);padding-bottom:6px;border-bottom:1px solid #DDD4C3}
+.entry{border-bottom:1px solid #ECE5D7}
+.erow{width:100%;cursor:pointer;border:0;background:transparent;font:inherit;color:inherit;text-align:left;display:flex;align-items:baseline;gap:14px;padding:12px 6px}
+.erow:hover{background:#F3EDE0}
+.erow:focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+.edot{flex:0 0 10px;width:10px;height:10px;border-radius:50%;transform:translateY(-2px)}
+.etxt{flex:1 1 auto;min-width:0}
+.et{font-family:Literata,Georgia,serif;font-size:20px}
+.ea{font-size:15px;color:var(--ink2)}
+.efav{color:var(--fav);flex:0 0 auto;transform:translateY(2px)}
+.ecat{flex:0 0 auto;font-size:13px;color:var(--mut);white-space:nowrap}
+.edetail{padding:2px 6px 16px 30px;font-size:14px;color:#4A453E;line-height:1.7}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
 /* library */
 .year{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
 .divider{flex:0 0 170px;position:sticky;top:16px;background:var(--ink);color:#FBF7EE;border-radius:10px 10px 10px 2px;padding:18px 20px;box-shadow:0 2px 0 #000}
@@ -120,6 +147,9 @@ a{color:var(--fav)}
   .detail{grid-template-columns:repeat(2,minmax(0,1fr));margin-left:0}
   .spine{padding:0 12px;max-width:calc(100% - 48px)}
   .spine .a{display:none}
+  .cside{flex-basis:100%;flex-direction:row;align-items:center;flex-wrap:wrap;gap:8px 16px}
+  .cy{font-size:44px}.cmix{flex:1 1 100%}
+  .ecat{display:none}.et{font-size:18px}
   .labs div{font-size:9px}
   .chart{padding-left:40px}
 }
@@ -134,6 +164,7 @@ a{color:var(--fav)}
     </div>
     <nav class="tabs" aria-label="Onglets">
       <a href="#bibliotheque" id="tab-lib">Bibliothèque</a>
+      <a href="#carnet" id="tab-carnet">Carnet</a>
       <a href="#statistiques" id="tab-stats">Statistiques</a>
     </nav>
   </header>
@@ -169,42 +200,66 @@ const topN = (map, n) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0,
 const legend = (items) => '<div class="legend">' + items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join('') + '</div>';
 
 let BOOKS = [];
-const state = { open: null, onlyFav: false, q: '', sel: null };
+const state = { open: null, onlyFav: false, q: '', sel: null, cats: new Set() };
 
 // ---------- routing ----------
 function route() {
-  const stats = location.hash === '#statistiques';
-  document.getElementById('tab-lib').setAttribute('aria-current', stats ? 'false' : 'page');
-  document.getElementById('tab-stats').setAttribute('aria-current', stats ? 'page' : 'false');
-  stats ? renderStats() : renderLibrary();
+  const v = location.hash === '#statistiques' ? 'stats' : location.hash === '#carnet' ? 'carnet' : 'lib';
+  for (const k of ['lib', 'carnet', 'stats']) document.getElementById('tab-' + k).setAttribute('aria-current', k === v ? 'page' : 'false');
+  state.open = null;
+  v === 'stats' ? renderStats() : renderList(v);
 }
-window.addEventListener('hashchange', route);
 
-// ---------- library ----------
-function renderLibrary() {
+// ---------- shared filters ----------
+const CATS = GROUPS.flatMap(([, c, cats]) => cats.map((k) => [k, c]));
+const norm = (s) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+function visibleBooks() {
+  const q = norm(state.q.trim());
+  return BOOKS.filter((b) => (!state.onlyFav || b.coup_de_coeur)
+    && (!state.cats.size || state.cats.has(b.categorie))
+    && (!q || norm(b.titre + ' ' + b.auteur).includes(q)));
+}
+function renderList(mode) {
   const view = document.getElementById('view');
-  view.innerHTML = `<div style="display:flex;flex-direction:column;gap:32px">
-    <div class="toolbar">
-      ${legend(GROUPS.map(([g, , cats]) => [g, SPINE[cats[0]]]))}
+  const chips = CATS.map(([k, c]) => `<button class="chip" data-cat="${esc(k)}" aria-pressed="${state.cats.has(k)}"><i style="background:${mode === 'lib' ? SPINE[k] : c}"></i>${esc(k)}</button>`).join('');
+  view.innerHTML = `<div style="display:flex;flex-direction:column;gap:28px">
+    <div class="filters">
       <div class="controls">
         <input class="search" type="search" id="q" placeholder="Chercher un titre ou un auteur" aria-label="Chercher un titre ou un auteur" value="${esc(state.q)}">
         <button class="favbtn" id="favbtn" aria-pressed="${state.onlyFav}">${HEART}Coups de cœur seulement</button>
       </div>
+      <div class="chips" role="group" aria-label="Filtrer par catégorie">
+        <button class="chip all" id="allcats" aria-pressed="${!state.cats.size}">Toutes les catégories</button>${chips}
+      </div>
+      <p class="count" id="count" aria-live="polite"></p>
     </div>
-    <div id="stacks" style="display:flex;flex-direction:column;gap:36px"></div>
+    <div id="list" style="display:flex;flex-direction:column;gap:${mode === 'lib' ? 36 : 48}px"></div>
   </div>`;
-  document.getElementById('favbtn').onclick = () => { state.onlyFav = !state.onlyFav; renderLibrary(); };
+  const draw = () => {
+    const list = visibleBooks();
+    const filtered = state.onlyFav || state.cats.size || state.q.trim();
+    document.getElementById('count').textContent = filtered ? `${list.length} livre${list.length > 1 ? 's' : ''} sur ${BOOKS.length}` : '';
+    (mode === 'lib' ? drawStacks : drawCarnet)(list);
+  };
+  document.getElementById('favbtn').onclick = (e) => { state.onlyFav = !state.onlyFav; e.currentTarget.setAttribute('aria-pressed', state.onlyFav); draw(); };
   const q = document.getElementById('q');
-  q.oninput = () => { state.q = q.value; drawStacks(); };
-  drawStacks();
+  q.oninput = () => { state.q = q.value; draw(); };
+  const syncChips = () => {
+    view.querySelectorAll('.chip[data-cat]').forEach((c) => c.setAttribute('aria-pressed', state.cats.has(c.dataset.cat)));
+    document.getElementById('allcats').setAttribute('aria-pressed', !state.cats.size);
+  };
+  view.querySelectorAll('.chip[data-cat]').forEach((c) => c.onclick = () => {
+    const k = c.dataset.cat; state.cats.has(k) ? state.cats.delete(k) : state.cats.add(k); syncChips(); draw();
+  });
+  document.getElementById('allcats').onclick = () => { state.cats.clear(); syncChips(); draw(); };
+  draw();
 }
+window.addEventListener('hashchange', route);
 
-function drawStacks() {
-  const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
-  const q = norm(state.q.trim());
-  const list = BOOKS.filter((b) => (!state.onlyFav || b.coup_de_coeur) && (!q || norm(b.titre + ' ' + b.auteur).includes(q)));
+// ---------- library ----------
+function drawStacks(list) {
   const years = [...new Set(list.map((b) => b.annee))].sort((a, b) => b - a);
-  const el = document.getElementById('stacks');
+  const el = document.getElementById('list');
   if (!list.length) { el.innerHTML = '<p class="empty">Aucun livre ne correspond.</p>'; return; }
   el.innerHTML = years.map((y) => {
     const yb = list.filter((b) => b.annee === y).sort((a, b) => b.mois - a.mois || b.id - a.id);
@@ -234,14 +289,54 @@ function drawStacks() {
           <div><div class="k">Langue</div><div class="v">${esc(langs)}</div></div>
           <div><div class="k">Nationalité</div><div class="v">${esc(nat)}</div></div>
           <div><div class="k">Publication</div><div class="v">${esc(pub)}</div></div>
+          ${b.isbn ? `<div><div class="k">ISBN</div><div class="v"><a href="https://openlibrary.org/isbn/${esc(b.isbn)}" target="_blank" rel="noopener">${esc(b.isbn)}</a></div></div>` : ''}
         </div>` : ''}
       </div>`;
     }).join('');
     return `<section class="year"><div class="divider"><div class="y">${y}</div><div class="m">${yb.length} livre${yb.length > 1 ? 's' : ''}<br>≈ ${fmt(pages)} pages</div></div><div class="stack">${rows}</div></section>`;
   }).join('');
   el.querySelectorAll('.spine').forEach((btn) => btn.onclick = () => {
-    const id = +btn.dataset.id; state.open = state.open === id ? null : id; drawStacks();
+    const id = +btn.dataset.id; state.open = state.open === id ? null : id; drawStacks(visibleBooks());
     const again = el.querySelector(`.spine[data-id="${id}"]`); if (again) again.focus({ preventScroll: true });
+  });
+}
+
+
+// ---------- carnet ----------
+function drawCarnet(list) {
+  const el = document.getElementById('list');
+  if (!list.length) { el.innerHTML = '<p class="empty">Aucun livre ne correspond.</p>'; return; }
+  const years = [...new Set(list.map((b) => b.annee))].sort((a, b) => b - a);
+  el.innerHTML = years.map((y) => {
+    const yb = list.filter((b) => b.annee === y).sort((a, b) => b.mois - a.mois || b.id - a.id);
+    const pages = yb.reduce((s, b) => s + b.pages, 0);
+    const vo = yb.filter((b) => !b.traduction && b.langue_lue !== 'français').length;
+    const mix = [...count(yb, (b) => GROUP_OF[b.categorie]).entries()].sort((a, b) => b[1] - a[1])
+      .map(([g, n]) => `<span title="${esc(g)} : ${n}" style="flex:${n} 1 0;background:${GROUPS.find((x) => x[0] === g)[1]}"></span>`).join('');
+    const months = [...new Set(yb.map((b) => b.mois))].map((m) => {
+      const rows = yb.filter((b) => b.mois === m).map((b) => {
+        const open = state.open === b.id;
+        const detail = [b.traduction ? `Lu en ${b.langue_lue}, traduit du ${b.langue_originale}` : `Lu en ${b.langue_lue} (VO)`,
+          b.nationalite + (b.nationalite_2 ? ' / ' + b.nationalite_2 : ''), `≈ ${b.pages} pages`, `publié en ${b.annee_publication || '—'}`]
+          .concat(b.serie ? [`série ${b.serie}`] : []).map(esc).join(' · ')
+          + (b.isbn ? ` · ISBN <a href="https://openlibrary.org/isbn/${esc(b.isbn)}" target="_blank" rel="noopener">${esc(b.isbn)}</a>` : '');
+        return `<div class="entry"><button class="erow" data-id="${b.id}" aria-expanded="${open}">
+            <span class="edot" style="background:${COLOR[b.categorie]}" aria-hidden="true"></span>
+            <span class="etxt"><span class="et">${esc(b.titre)}</span><span class="ea"> · ${esc(b.auteur)}</span></span>
+            ${b.coup_de_coeur ? `<span class="efav" title="Coup de cœur">${HEART}<span class="sr">Coup de cœur</span></span>` : ''}
+            <span class="ecat">${esc(b.categorie)}</span></button>
+          ${open ? `<div class="edetail">${detail}</div>` : ''}</div>`;
+      }).join('');
+      return `<div class="emonth"><div class="mh">${MOL[m - 1]}</div>${rows}</div>`;
+    }).join('');
+    return `<section class="cyear"><div class="cside"><div class="cy">${y}</div>
+      <div class="cmeta">${yb.length} livre${yb.length > 1 ? 's' : ''}<br>≈ ${fmt(pages)} pages${vo ? `<br>${vo} en VO étrangère` : ''}</div>
+      <div class="cmix" role="img" aria-label="Répartition par catégorie">${mix}</div></div>
+      <div class="cbody">${months}</div></section>`;
+  }).join('');
+  el.querySelectorAll('.erow').forEach((btn) => btn.onclick = () => {
+    const id = +btn.dataset.id; state.open = state.open === id ? null : id; drawCarnet(visibleBooks());
+    const again = el.querySelector(`.erow[data-id="${id}"]`); if (again) again.focus({ preventScroll: true });
   });
 }
 
