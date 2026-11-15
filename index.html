@@ -197,6 +197,7 @@ const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '
 const fmt = (n) => Math.round(n).toLocaleString('fr-FR');
 const count = (arr, f) => arr.reduce((m, x) => { const k = f(x); if (k != null) m.set(k, (m.get(k) || 0) + 1); return m; }, new Map());
 const topN = (map, n) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+const persons = (b) => b.auteur.split(/\s*,\s*/);
 const legend = (items) => '<div class="legend">' + items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join('') + '</div>';
 
 let BOOKS = [];
@@ -411,7 +412,7 @@ function renderStats() {
 
   const hero = `<div class="hero">${[
     [fmt(B.length), 'livres lus'], ['≈ ' + fmt(Math.round(pages / 100) * 100), 'pages'], [favs.length, 'coups de cœur'],
-    [new Set(B.map((b) => b.auteur)).size, 'auteurs et autrices'], [nat.size, 'pays'], [avg, 'livres par an en moyenne'],
+    [new Set(B.flatMap(persons)).size, 'auteurs et autrices'], [nat.size, 'pays'], [avg, 'livres par an en moyenne'],
   ].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
 
   // mosaic
@@ -515,7 +516,7 @@ function renderStats() {
   cards.push(card('Les pays des auteurs', 'Une case par pays, placée à peu près à sa position géographique. Plus la couleur est foncée, plus il y a de livres. C’est la nationalité principale de l’auteur qui compte.' + (unplaced.length ? ' Les pays sans position prévue sont rangés en bas.' : ''), mapBody, true));
 
   // authors, series
-  const byAuthor = count(B, (b) => b.auteur);
+  const byAuthor = count(B.flatMap(persons), (p) => p);
   cards.push(card('Auteurs les plus lus', 'Les dix noms qui reviennent le plus souvent.', hbars(topN(byAuthor, 10), { val: (v) => `${v} livres` })));
   cards.push(card('Séries suivies', 'Nombre de volumes lus dans chaque série.', hbars(topN(count(B, (b) => b.serie), 10), { val: (v) => `${v} vol.` })));
 
@@ -525,7 +526,7 @@ function renderStats() {
   let tl = `<div class="scroll"><div style="min-width:760px;display:flex;flex-direction:column;gap:4px"><div style="display:grid;grid-template-columns:${gcols};gap:2px"><div></div>${YL.map((l) => `<div style="font-size:11px;color:var(--mut);text-align:center">${l}</div>`).join('')}</div>`;
   top8.forEach((a) => {
     tl += `<div style="display:grid;grid-template-columns:${gcols};gap:2px;align-items:center;border-top:1px solid var(--grid);height:34px"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a)}</div>`;
-    Y.forEach((y) => { const k = byYear.get(y).filter((b) => b.auteur === a).length, d = k ? 8 + 5 * k : 0;
+    Y.forEach((y) => { const k = byYear.get(y).filter((b) => persons(b).includes(a)).length, d = k ? 8 + 5 * k : 0;
       tl += `<div style="display:flex;justify-content:center">${k ? `<span title="${esc(a)} · ${y} : ${k} livre${k > 1 ? 's' : ''}" style="width:${d}px;height:${d}px;border-radius:50%;background:var(--bar)"></span>` : ''}</div>`; });
     tl += '</div>';
   });
