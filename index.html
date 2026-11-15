@@ -1,0 +1,461 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mes lectures</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F4EFE6; --surf:#FFFDF8; --line:#E2D9C9; --grid:#E8E1D4;
+  --ink:#1E1B17; --ink2:#5E574D; --mut:#6B645A; --bar:#3E3A34; --soft:#BDB3A3;
+  --fav:#8E2A20; --favbg:#F6E3E0;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,sans-serif}
+.serif{font-family:Literata,Georgia,serif}
+.wrap{max-width:1180px;margin:0 auto;padding:40px 24px 80px;display:flex;flex-direction:column;gap:28px}
+header.top{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:16px}
+h1{margin:0;font-family:Literata,Georgia,serif;font-weight:600;font-size:44px;letter-spacing:-.5px}
+.sub{margin:6px 0 0;color:var(--ink2);font-size:15px}
+nav.tabs{display:flex;gap:4px;background:#E8E1D4;padding:4px;border-radius:10px}
+nav.tabs a{text-decoration:none;padding:10px 18px;border-radius:7px;color:#4A453E;font-weight:500;font-size:14px}
+nav.tabs a[aria-current="page"]{background:var(--surf);color:var(--ink);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+a{color:var(--fav)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px}
+.legend span{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:#3E3A34}
+.legend i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.toolbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:14px}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.search{font:inherit;font-size:14px;padding:10px 14px;border:1px solid #C9BFAE;border-radius:999px;background:var(--surf);min-width:240px}
+.favbtn{cursor:pointer;display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:14px;font-weight:500;padding:10px 16px;border-radius:999px;border:1px solid #C9BFAE;background:var(--surf);color:var(--ink)}
+.favbtn[aria-pressed="true"]{background:var(--fav);border-color:var(--fav);color:#fff}
+.heart{width:15px;height:15px;flex:0 0 15px}
+/* library */
+.year{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}
+.divider{flex:0 0 170px;position:sticky;top:16px;background:var(--ink);color:#FBF7EE;border-radius:10px 10px 10px 2px;padding:18px 20px;box-shadow:0 2px 0 #000}
+.divider .y{font-family:Literata,Georgia,serif;font-size:48px;font-weight:600;line-height:1}
+.divider .m{margin-top:10px;font-size:14px;line-height:1.5}
+.stack{flex:999 1 560px;min-width:0;display:flex;flex-direction:column;gap:3px}
+.row{display:flex;align-items:center;gap:14px}
+.month{flex:0 0 44px;font-size:12px;color:var(--mut);text-align:right}
+.spine{cursor:pointer;border:0;font:inherit;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:0 18px;border-radius:3px;
+  box-shadow:inset 6px 0 0 rgba(0,0,0,.14),inset -6px 0 0 rgba(0,0,0,.14),0 1px 1px rgba(0,0,0,.18);max-width:calc(100% - 58px)}
+.spine:hover{filter:brightness(1.08)}
+.spine:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.spine .t{display:flex;align-items:center;gap:8px;min-width:0}
+.spine .t b{font-family:Literata,Georgia,serif;font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.spine .a{font-size:11px;letter-spacing:1.2px;text-transform:uppercase;white-space:nowrap;opacity:.92;overflow:hidden;text-overflow:ellipsis;max-width:45%}
+.detail{margin:6px 0 12px 58px;background:var(--surf);border:1px solid var(--line);border-radius:10px;padding:20px 24px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 24px}
+.detail .full{grid-column:1/-1}
+.detail .k{font-size:12px;color:var(--mut)}
+.detail .v{font-size:15px}
+.pill{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:4px 10px;border-radius:999px;background:var(--favbg);color:var(--fav);font-size:13px;font-weight:600}
+.empty{color:var(--ink2);font-size:15px}
+/* stats */
+.hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.hero div{background:var(--surf);border:1px solid var(--line);border-radius:12px;padding:16px 18px}
+.hero b{display:block;font-family:Literata,Georgia,serif;font-size:30px;font-weight:600}
+.hero span{font-size:13px;color:var(--ink2)}
+.cards{display:flex;flex-wrap:wrap;gap:24px}
+.card{flex:1 1 480px;min-width:0;background:var(--surf);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:18px}
+.card.full{flex-basis:100%}
+.card h2{margin:0;font-family:Literata,Georgia,serif;font-size:21px;font-weight:600}
+.card p.d{margin:4px 0 0;font-size:14px;color:var(--ink2)}
+.chart{padding-left:48px}
+.plot{position:relative;border-bottom:1px solid var(--soft)}
+.gl{position:absolute;left:0;right:0;border-top:1px solid var(--grid)}
+.gl span{position:absolute;left:-46px;top:-8px;width:40px;white-space:nowrap;text-align:right;font-size:11px;color:var(--mut)}
+.cols{position:absolute;inset:0;display:flex;gap:2px}
+.col{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%}
+.col .v{font-size:11px;margin-bottom:3px}
+.col .b{width:70%;max-width:34px;border-radius:4px 4px 0 0}
+.stk{width:70%;max-width:34px;display:flex;flex-direction:column-reverse;gap:2px;border-radius:4px 4px 0 0;overflow:hidden}
+.labs{display:flex;gap:2px;margin-top:6px}
+.labs div{flex:1 1 0;min-width:0;overflow:hidden;text-align:center;font-size:11px;color:var(--mut)}
+.col{min-width:0}
+.hb{display:flex;flex-direction:column;gap:8px}
+.hb .r{display:grid;gap:12px;align-items:center}
+.hb .l{font-size:14px;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hb .bw{display:flex;align-items:center;gap:8px}
+.hb .bar{height:16px;border-radius:0 4px 4px 0}
+.hb .n{font-size:13px;color:var(--ink2);white-space:nowrap}
+.scroll{overflow-x:auto}
+.mos-sel{display:flex;align-items:center;gap:16px;background:var(--bg);border-radius:10px;padding:14px 18px;min-height:56px}
+.mos-sel .sw{width:8px;align-self:stretch;border-radius:3px}
+.mos-grid{min-width:860px;display:flex;flex-direction:column;gap:5px}
+.mos-row{display:grid;grid-template-columns:56px repeat(12,minmax(0,1fr)) 40px;gap:6px;align-items:center}
+.mos-row+.mos-row{border-top:1px solid var(--grid);padding-top:5px}
+.cell{display:flex;flex-wrap:wrap;gap:3px;min-height:16px;justify-content:center}
+.tile{cursor:pointer;border:0;padding:0;width:16px;height:16px;border-radius:4px;display:flex;align-items:center;justify-content:center}
+.tile:hover{transform:scale(1.3)}
+.tile:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.tile.on{box-shadow:0 0 0 2px var(--surf),0 0 0 4px var(--ink)}
+.map{min-width:760px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:6px}
+.map div{aspect-ratio:1;border-radius:8px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;min-width:0}
+.map small{font-size:11px;line-height:1.15;overflow:hidden}
+.map b{font-size:17px}
+.favlist{columns:3 260px;column-gap:28px;font-size:14px;line-height:1.5}
+.favlist div{break-inside:avoid;padding:4px 0;border-bottom:1px solid var(--grid)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:8px}
+.note{margin:0;font-size:13px;color:var(--mut)}
+@media (max-width:640px){
+  h1{font-size:34px}
+  .divider{position:static;flex-basis:100%;display:flex;align-items:baseline;gap:16px;padding:12px 16px}
+  .divider .y{font-size:32px}.divider .m{margin:0}
+  .month{flex-basis:34px}
+  .detail{grid-template-columns:repeat(2,minmax(0,1fr));margin-left:0}
+  .spine{padding:0 12px;max-width:calc(100% - 48px)}
+  .spine .a{display:none}
+  .labs div{font-size:9px}
+  .chart{padding-left:40px}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <h1>Mes lectures</h1>
+      <p class="sub" id="subtitle">Chargement…</p>
+    </div>
+    <nav class="tabs" aria-label="Onglets">
+      <a href="#bibliotheque" id="tab-lib">Bibliothèque</a>
+      <a href="#statistiques" id="tab-stats">Statistiques</a>
+    </nav>
+  </header>
+  <main id="view"></main>
+</div>
+
+<script>
+'use strict';
+// ---------- constants ----------
+const GROUPS = [
+  ['Roman', '#2a78d6', ['Roman']],
+  ['Polar', '#eb6834', ['Polar']],
+  ['SF & fantasy', '#1baf7a', ['Science-fiction', 'Fantasy']],
+  ['Récit, biographie', '#eda100', ['Récit, biographie, mémoires']],
+  ['Histoire & sciences', '#e87ba4', ['Histoire', 'Livre scientifique']],
+  ['Sport, BD & divers', '#008300', ['Sport', 'BD, roman graphique', 'Autre non-fiction']],
+  ['Essai politique', '#6250d6', ['Essai politique']],
+  ['Journalisme', '#e34948', ['Journalisme']],
+];
+const GROUP_OF = {}, COLOR = {};
+GROUPS.forEach(([g, c, cats]) => cats.forEach((k) => { GROUP_OF[k] = g; COLOR[k] = c; }));
+// deeper steps of the same hue on spines so their text clears 4.5:1
+const SPINE = { ...COLOR, 'Roman': '#256abf', 'Journalisme': '#c63a3a' };
+const SPINE_FG = { '#256abf': '#fff', '#c63a3a': '#fff', '#008300': '#fff', '#6250d6': '#fff' };
+const MO = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+const MOL = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+const HEART = '<svg class="heart" aria-hidden="true" viewBox="0 0 24 24"><path fill="currentColor" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>';
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n) => Math.round(n).toLocaleString('fr-FR');
+const count = (arr, f) => arr.reduce((m, x) => { const k = f(x); if (k != null) m.set(k, (m.get(k) || 0) + 1); return m; }, new Map());
+const topN = (map, n) => [...map.entries()].sort((a, b) => b[1] - a[1]).slice(0, n);
+const legend = (items) => '<div class="legend">' + items.map(([n, c]) => `<span><i style="background:${c}"></i>${esc(n)}</span>`).join('') + '</div>';
+
+let BOOKS = [];
+const state = { open: null, onlyFav: false, q: '', sel: null };
+
+// ---------- routing ----------
+function route() {
+  const stats = location.hash === '#statistiques';
+  document.getElementById('tab-lib').setAttribute('aria-current', stats ? 'false' : 'page');
+  document.getElementById('tab-stats').setAttribute('aria-current', stats ? 'page' : 'false');
+  stats ? renderStats() : renderLibrary();
+}
+window.addEventListener('hashchange', route);
+
+// ---------- library ----------
+function renderLibrary() {
+  const view = document.getElementById('view');
+  view.innerHTML = `<div style="display:flex;flex-direction:column;gap:32px">
+    <div class="toolbar">
+      ${legend(GROUPS.map(([g, , cats]) => [g, SPINE[cats[0]]]))}
+      <div class="controls">
+        <input class="search" type="search" id="q" placeholder="Chercher un titre ou un auteur" aria-label="Chercher un titre ou un auteur" value="${esc(state.q)}">
+        <button class="favbtn" id="favbtn" aria-pressed="${state.onlyFav}">${HEART}Coups de cœur seulement</button>
+      </div>
+    </div>
+    <div id="stacks" style="display:flex;flex-direction:column;gap:36px"></div>
+  </div>`;
+  document.getElementById('favbtn').onclick = () => { state.onlyFav = !state.onlyFav; renderLibrary(); };
+  const q = document.getElementById('q');
+  q.oninput = () => { state.q = q.value; drawStacks(); };
+  drawStacks();
+}
+
+function drawStacks() {
+  const norm = (s) => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+  const q = norm(state.q.trim());
+  const list = BOOKS.filter((b) => (!state.onlyFav || b.coup_de_coeur) && (!q || norm(b.titre + ' ' + b.auteur).includes(q)));
+  const years = [...new Set(list.map((b) => b.annee))].sort((a, b) => b - a);
+  const el = document.getElementById('stacks');
+  if (!list.length) { el.innerHTML = '<p class="empty">Aucun livre ne correspond.</p>'; return; }
+  el.innerHTML = years.map((y) => {
+    const yb = list.filter((b) => b.annee === y).sort((a, b) => b.mois - a.mois || b.id - a.id);
+    const pages = yb.reduce((s, b) => s + b.pages, 0);
+    let last = null;
+    const rows = yb.map((b) => {
+      const month = b.mois === last ? '' : MO[b.mois - 1]; last = b.mois;
+      const bg = SPINE[b.categorie], fg = SPINE_FG[bg] || '#1E1B17';
+      const h = Math.round(30 + Math.min(b.pages, 1000) / 1000 * 30);
+      const w = 80 + ((b.id * 37) % 17), off = ((b.id * 53) % 21) - 4;
+      const open = state.open === b.id;
+      const langs = b.traduction ? `${b.langue_lue} (traduit du ${b.langue_originale})` : `${b.langue_lue} (VO)`;
+      const nat = b.nationalite + (b.nationalite_2 ? ' / ' + b.nationalite_2 : '');
+      const pub = (b.annee_publication || '—') + (b.serie ? ' · série ' + b.serie : '');
+      return `<div>
+        <div class="row"><span class="month">${month}</span>
+          <button class="spine" data-id="${b.id}" aria-expanded="${open}" style="margin-left:${off}px;width:${w}%;min-height:${h}px;background:${bg};color:${fg}">
+            <span class="t">${b.coup_de_coeur ? HEART : ''}<b>${esc(b.titre)}</b></span><span class="a">${esc(b.auteur)}</span>
+          </button></div>
+        ${open ? `<div class="detail">
+          <div class="full"><div class="serif" style="font-size:22px;font-weight:600">${esc(b.titre)}</div>
+            <div style="color:var(--ink2);margin-top:2px">${esc(b.auteur)}</div>
+            ${b.coup_de_coeur ? `<span class="pill">${HEART}Coup de cœur</span>` : ''}</div>
+          <div><div class="k">Lu en</div><div class="v">${MOL[b.mois - 1]} ${b.annee}</div></div>
+          <div><div class="k">Catégorie</div><div class="v">${esc(b.categorie)}</div></div>
+          <div><div class="k">Pages</div><div class="v">≈ ${b.pages}</div></div>
+          <div><div class="k">Langue</div><div class="v">${esc(langs)}</div></div>
+          <div><div class="k">Nationalité</div><div class="v">${esc(nat)}</div></div>
+          <div><div class="k">Publication</div><div class="v">${esc(pub)}</div></div>
+        </div>` : ''}
+      </div>`;
+    }).join('');
+    return `<section class="year"><div class="divider"><div class="y">${y}</div><div class="m">${yb.length} livre${yb.length > 1 ? 's' : ''}<br>≈ ${fmt(pages)} pages</div></div><div class="stack">${rows}</div></section>`;
+  }).join('');
+  el.querySelectorAll('.spine').forEach((btn) => btn.onclick = () => {
+    const id = +btn.dataset.id; state.open = state.open === id ? null : id; drawStacks();
+    const again = el.querySelector(`.spine[data-id="${id}"]`); if (again) again.focus({ preventScroll: true });
+  });
+}
+
+// ---------- chart helpers ----------
+function niceStep(mx) { for (const s of [1, 2, 5, 10, 20, 25, 50, 100, 200, 500, 1000, 2000, 2500, 5000, 10000, 20000]) if (mx / s <= 4) return s; return 50000; }
+function grid(mx, h, unit = '') {
+  const s = niceStep(mx); let out = '';
+  for (let t = s; t <= mx; t += s) out += `<div class="gl" style="bottom:${Math.round(t / mx * h)}px"><span>${fmt(t)}${unit}</span></div>`;
+  return out;
+}
+function vbars(labels, vals, { h = 170, color = 'var(--bar)', tip = (l, v) => `${l} : ${v}`, show, topv } = {}) {
+  let mx = topv || Math.max(...vals); const s = niceStep(mx); mx = Math.max(mx, Math.floor(mx / s) * s);
+  show = show || new Set([vals.indexOf(Math.max(...vals)), vals.length - 1]);
+  const cols = vals.map((v, i) => `<div class="col" title="${esc(tip(labels[i], v))}">${show.has(i) ? `<span class="v">${fmt(v)}</span>` : ''}<div class="b" style="height:${v ? Math.max(Math.round(v / mx * h), 1) : 0}px;background:${color}"></div></div>`).join('');
+  return `<div class="chart"><div class="plot" style="height:${h}px">${grid(mx, h)}<div class="cols">${cols}</div></div><div class="labs">${labels.map((l) => `<div>${esc(l)}</div>`).join('')}</div></div>`;
+}
+function stacked(labels, rows, series, { h = 200, pct = false } = {}) {
+  const tots = rows.map((r) => series.reduce((s, [n]) => s + (r.get(n) || 0), 0));
+  const mx = pct ? 100 : Math.max(...tots);
+  const cols = rows.map((r, i) => {
+    const t = tots[i];
+    const segs = series.map(([n, c]) => {
+      const v = r.get(n) || 0; if (!v) return '';
+      const hh = (pct ? v / t * 100 : v) / mx * h;
+      return `<div title="${esc(`${labels[i]} · ${n} : ${v} livre${v > 1 ? 's' : ''} (${Math.round(100 * v / t)} %)`)}" style="height:${Math.max(Math.round(hh) - 2, 1)}px;background:${c}"></div>`;
+    }).join('');
+    return `<div class="col"><div class="stk">${segs}</div></div>`;
+  }).join('');
+  return `<div class="chart"><div class="plot" style="height:${h}px">${grid(mx, h, pct ? ' %' : '')}<div class="cols">${cols}</div></div><div class="labs">${labels.map((l) => `<div>${l}</div>`).join('')}</div></div>`;
+}
+function hbars(items, { labw = 190, val = (v) => fmt(v) } = {}) {
+  const mx = Math.max(...items.map((x) => x[1]));
+  return '<div class="hb">' + items.map(([l, v, c, extra]) => `<div class="r" style="grid-template-columns:${labw}px minmax(0,1fr)" title="${esc(l)} : ${esc(val(v))}${esc(extra || '')}">
+    <div class="l">${esc(l)}</div><div class="bw"><div class="bar" style="width:${Math.max(v / mx * 100, .8).toFixed(1)}%;background:${c || 'var(--bar)'}"></div><span class="n">${val(v)}${esc(extra || '')}</span></div></div>`).join('') + '</div>';
+}
+const card = (title, desc, body, full) => `<section class="card${full ? ' full' : ''}"><div><h2>${title}</h2><p class="d">${desc}</p></div>${body}</section>`;
+const lum = (hex) => { const f = (c) => (c /= 255) <= .03928 ? c / 12.92 : ((c + .055) / 1.055) ** 2.4; const n = parseInt(hex.slice(1), 16); return .2126 * f(n >> 16) + .7152 * f((n >> 8) & 255) + .0722 * f(n & 255); };
+
+// ---------- stats ----------
+function renderStats() {
+  const B = BOOKS;
+  const y0 = Math.min(...B.map((b) => b.annee)), y1 = Math.max(...B.map((b) => b.annee));
+  const Y = []; for (let y = y0; y <= y1; y++) Y.push(y);
+  const YL = Y.map((y) => '’' + String(y).slice(2));
+  const byYear = new Map(Y.map((y) => [y, B.filter((b) => b.annee === y)]));
+  const first = B.reduce((a, b) => (a.annee * 12 + a.mois <= b.annee * 12 + b.mois ? a : b));
+  const lastB = B.reduce((a, b) => (a.annee * 12 + a.mois >= b.annee * 12 + b.mois ? a : b));
+  const pages = B.reduce((s, b) => s + b.pages, 0);
+  const favs = B.filter((b) => b.coup_de_coeur);
+  const fullYears = Y.filter((y) => y > y0 && y < y1);
+  const avg = fullYears.length ? Math.round(fullYears.reduce((s, y) => s + byYear.get(y).length, 0) / fullYears.length) : B.length;
+  const nat = count(B, (b) => b.nationalite);
+  const cards = [];
+
+  const hero = `<div class="hero">${[
+    [fmt(B.length), 'livres lus'], ['≈ ' + fmt(Math.round(pages / 100) * 100), 'pages'], [favs.length, 'coups de cœur'],
+    [new Set(B.map((b) => b.auteur)).size, 'auteurs et autrices'], [nat.size, 'pays'], [avg, 'livres par an en moyenne'],
+  ].map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
+
+  // mosaic
+  const heads = MO.map((m) => `<div style="font-size:12px;color:var(--mut);text-align:center">${m}</div>`).join('');
+  const mosRows = [...Y].reverse().map((y) => {
+    const yb = byYear.get(y);
+    const cells = MO.map((_, i) => `<div class="cell">${yb.filter((b) => b.mois === i + 1).sort((a, b) => a.id - b.id).map((b) =>
+      `<button class="tile${state.sel === b.id ? ' on' : ''}" data-id="${b.id}" style="background:${COLOR[b.categorie]};color:#fff" title="${esc(b.titre + ' — ' + b.auteur + (b.coup_de_coeur ? ' (coup de cœur)' : ''))}" aria-label="${esc(b.titre + ' — ' + b.auteur)}">${b.coup_de_coeur ? '<svg aria-hidden="true" width="9" height="9" viewBox="0 0 24 24"><path fill="#fff" stroke="#1E1B17" stroke-width="2" d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>' : ''}</button>`).join('')}</div>`).join('');
+    return `<div class="mos-row"><div style="font-weight:600;font-size:15px">${y}</div>${cells}<div style="text-align:right;font-size:14px;color:#3E3A34">${yb.length}</div></div>`;
+  }).join('');
+  const mos = card('Toutes les lectures en un coup d’œil', 'Un carré par livre, rangé par mois. Le petit cœur signale un coup de cœur. Clique sur un carré pour voir le livre.',
+    legend(GROUPS.map(([g, c]) => [g, c])) + '<div class="mos-sel" id="mos-sel"></div>' +
+    `<div class="scroll"><div class="mos-grid"><div class="mos-row"><div></div>${heads}<div style="font-size:12px;color:var(--mut);text-align:right">total</div></div>${mosRows}</div></div>`, true);
+
+  // per year
+  const nb = Y.map((y) => byYear.get(y).length), pg = Y.map((y) => byYear.get(y).reduce((s, b) => s + b.pages, 0));
+  cards.push(card('Livres par an', `${y0} commence en ${MOL[first.mois - 1]} et ${y1} s’arrête en ${MOL[lastB.mois - 1]}.`, vbars(YL, nb, { tip: (l, v) => `${l} : ${v} livres` })));
+  cards.push(card('Pages par an', 'Nombre de pages approximatif, d’après une édition courante.', vbars(YL, pg, { tip: (l, v) => `${l} : ≈ ${fmt(v)} pages` })));
+
+  // cumulative
+  const sorted = [...B].sort((a, b) => a.annee - b.annee || a.mois - b.mois || a.id - b.id);
+  const months = []; for (let y = y0; y <= y1; y++) for (let m = 1; m <= 12; m++) { if ((y === y0 && m < first.mois) || (y === y1 && m > lastB.mois)) continue; months.push([y, m]); }
+  const W = 960, H = 260, n = months.length, ymax = Math.ceil(B.length / 100) * 100 || 100;
+  const px = (i) => 40 + i / Math.max(n - 1, 1) * (W - 60), py = (v) => H - 30 - v / ymax * (H - 50);
+  let cum = 0; const pts = []; const miles = [];
+  months.forEach(([y, m], i) => { sorted.filter((b) => b.annee === y && b.mois === m).forEach((b) => { cum++; if (cum % 100 === 0 || cum === B.length) miles.push([i, cum, b]); }); pts.push([i, cum]); });
+  const poly = pts.map(([i, v]) => `${px(i).toFixed(1)},${py(v).toFixed(1)}`).join(' ');
+  let svg = `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Nombre cumulé de livres lus" style="display:block;font-family:Inter,sans-serif">`;
+  for (let t = 100; t <= ymax; t += 100) svg += `<line x1="40" x2="${W - 20}" y1="${py(t)}" y2="${py(t)}" stroke="#E8E1D4"/><text x="34" y="${py(t) + 4}" text-anchor="end" font-size="11" fill="#6B645A">${t}</text>`;
+  months.forEach(([y, m], i) => { if (m === 1 && y % 2 === 0) svg += `<text x="${px(i)}" y="${H - 10}" text-anchor="middle" font-size="11" fill="#6B645A">${y}</text>`; });
+  svg += `<line x1="40" x2="${W - 20}" y1="${py(0)}" y2="${py(0)}" stroke="#BDB3A3"/><polygon points="40,${py(0)} ${poly} ${px(n - 1)},${py(0)}" fill="#3E3A34" fill-opacity=".08"/><polyline points="${poly}" fill="none" stroke="#3E3A34" stroke-width="2" stroke-linejoin="round"/>`;
+  miles.forEach(([i, c, b]) => {
+    const right = px(i) > W * .6, lab = `${c}e livre : ${b.titre}`;
+    svg += `<circle cx="${px(i)}" cy="${py(c)}" r="5" fill="#3E3A34" stroke="#FFFDF8" stroke-width="2"><title>${esc(lab)} (${esc(b.auteur)}, ${MOL[b.mois - 1]} ${b.annee})</title></circle><text x="${px(i) + (right ? -10 : -10)}" y="${py(c) - 14}" text-anchor="end" font-size="12" fill="#1E1B17" stroke="#FFFDF8" stroke-width="4" paint-order="stroke">${esc(lab)}</text>`;
+  });
+  svg += '</svg>';
+  cards.push(card('Lectures cumulées', 'Chaque point marque un cap de 100 livres.', svg, true));
+
+  // season
+  const sea = MO.map((_, i) => B.filter((b) => b.mois === i + 1).length);
+  cards.push(card('Saisonnalité', 'Total des livres lus par mois, toutes années cumulées.', vbars(MO.map((m) => m.replace('.', '')), sea, { tip: (l, v) => `${l} : ${v} livres`, show: new Set(sea.keys()) })));
+
+  // length
+  const bins = [[0, 150, '< 150'], [150, 250, '150–249'], [250, 350, '250–349'], [350, 450, '350–449'], [450, 600, '450–599'], [600, 800, '600–799'], [800, 1e9, '800 et +']];
+  const lv = bins.map(([lo, hi]) => B.filter((b) => b.pages >= lo && b.pages < hi).length);
+  const longest = [...B].sort((a, b) => b.pages - a.pages).slice(0, 3).map((b) => `${esc(b.titre)} (${b.pages} p.)`).join(', ');
+  cards.push(card('Longueur des livres', `Nombre de livres par tranche de pages. Les plus longs : ${longest}.`, vbars(bins.map((x) => x[2]), lv, { tip: (l, v) => `${l} pages : ${v} livres`, show: new Set(lv.keys()) })));
+
+  // categories per year
+  const ser = GROUPS.map(([g, c]) => [g, c]);
+  cards.push(card('Catégories au fil des années', 'Nombre de livres par catégorie et par an. SF et fantasy, histoire et sciences, et sport, BD et divers sont regroupés pour garder des couleurs lisibles.',
+    legend(ser) + stacked(YL, Y.map((y) => count(byYear.get(y), (b) => GROUP_OF[b.categorie])), ser, { h: 220 }), true));
+
+  // fiction
+  const fs = [['Fiction', '#3E3A34'], ['Non-fiction', '#BDB3A3']];
+  const tf = B.filter((b) => b.fiction).length;
+  cards.push(card('Fiction et non-fiction', `Part de chaque type par an. Sur l’ensemble : ${Math.round(100 * tf / B.length)} % de fiction.`,
+    legend(fs) + stacked(YL, Y.map((y) => count(byYear.get(y), (b) => b.fiction ? 'Fiction' : 'Non-fiction')), fs, { pct: true })));
+
+  // reading language
+  const langs = [['français', '#3E3A34'], ['anglais', '#9C9282'], ['italien', '#D9CFBE']];
+  const others = B.filter((b) => !langs.some(([l]) => l === b.langue_lue));
+  cards.push(card('Langue de lecture', 'Part de chaque langue par an.' + (others.length ? ` Les ${others.length} livres lus dans une autre langue (${[...new Set(others.map((b) => b.langue_lue))].join(', ')}) sont trop rares pour apparaître.` : ''),
+    legend(langs) + stacked(YL, Y.map((y) => count(byYear.get(y), (b) => b.langue_lue)), langs, { pct: true })));
+
+  // VO / translation
+  const vt = B.filter((b) => b.traduction).length;
+  const lr = [...count(B, (b) => b.langue_lue).entries()].sort((a, b) => b[1] - a[1]);
+  const mxv = Math.max(...lr.map((x) => x[1]));
+  const voBody = '<div class="hb">' + lr.map(([l, tot]) => {
+    const t = B.filter((b) => b.langue_lue === l && b.traduction).length, a = tot - t;
+    return `<div class="r" style="grid-template-columns:90px minmax(0,1fr)"><div class="l">${l}</div><div class="bw"><div style="display:flex;gap:2px;width:${(tot / mxv * 100).toFixed(1)}%;min-width:8px">
+      <div title="${l} · version originale : ${a}" style="flex:${a} 1 0;height:16px;background:#3E3A34;border-radius:${t ? '0' : '0 4px 4px 0'}"></div>
+      ${t ? `<div title="${l} · traduction : ${t}" style="flex:${t} 1 0;height:16px;background:#BDB3A3;border-radius:0 4px 4px 0"></div>` : ''}</div>
+      <span class="n">${a} VO${t ? ` · ${t} trad.` : ''}</span></div></div>`;
+  }).join('') + '</div>';
+  cards.push(card('Version originale ou traduction', `${vt} livres lus en traduction sur ${B.length}.`, legend([['Version originale', '#3E3A34'], ['Traduction', '#BDB3A3']]) + voBody));
+
+  // map
+  const POS = { 'Canada': [0, 0], 'États-Unis': [0, 1], 'Argentine': [0, 3], 'Irlande': [3, 0], 'Royaume-Uni': [3, 1], 'Norvège': [5, 0], 'Suède': [6, 0], 'Finlande': [7, 0], 'Russie': [8, 0],
+    'Belgique': [4, 1], 'Allemagne': [5, 1], 'Portugal': [3, 2], 'France': [4, 2], 'Suisse': [5, 2], 'Italie': [6, 2], 'Grèce': [7, 2], 'Israël': [8, 2], 'Égypte': [7, 3],
+    'Chine': [9, 1], 'Corée du Sud': [10, 1], 'Japon': [11, 1] };
+  const RAMP = ['#cde2fb', '#9ec5f4', '#6da7ec', '#3987e5', '#256abf', '#184f95', '#0d366b'];
+  const natMax = Math.max(...nat.values());
+  const shade = (v) => RAMP[Math.min(Math.floor(Math.log(v) / Math.log(natMax + 1) * RAMP.length), RAMP.length - 1)];
+  const unplaced = [...nat.keys()].filter((k) => !POS[k]);
+  let free = 0;
+  const tiles = [...nat.entries()].map(([k, v]) => {
+    const [x, y] = POS[k] || [free++, 4]; const bg = shade(v), fg = lum(bg) < .2 ? '#fff' : '#1E1B17';
+    return `<div title="${esc(k)} : ${v} livre${v > 1 ? 's' : ''}" style="grid-column:${x + 1};grid-row:${y + 1};background:${bg};color:${fg}"><small>${esc(k)}</small><b>${v}</b></div>`;
+  }).join('');
+  const mapBody = `<div class="scroll"><div class="map">${tiles}</div></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--mut)"><span>1 livre</span>${RAMP.map((c) => `<span aria-hidden="true" style="width:28px;height:10px;background:${c}"></span>`).join('')}<span>${natMax} livres</span></div>`;
+  cards.push(card('Les pays des auteurs', 'Une case par pays, placée à peu près à sa position géographique. Plus la couleur est foncée, plus il y a de livres. C’est la nationalité principale de l’auteur qui compte.' + (unplaced.length ? ' Les pays sans position prévue sont rangés en bas.' : ''), mapBody, true));
+
+  // authors, series
+  const byAuthor = count(B, (b) => b.auteur);
+  cards.push(card('Auteurs les plus lus', 'Les dix noms qui reviennent le plus souvent.', hbars(topN(byAuthor, 10), { val: (v) => `${v} livres` })));
+  cards.push(card('Séries suivies', 'Nombre de volumes lus dans chaque série.', hbars(topN(count(B, (b) => b.serie), 10), { val: (v) => `${v} vol.` })));
+
+  // fidelity
+  const top8 = topN(byAuthor, 8).map((x) => x[0]);
+  const gcols = `170px repeat(${Y.length},minmax(0,1fr))`;
+  let tl = `<div class="scroll"><div style="min-width:760px;display:flex;flex-direction:column;gap:4px"><div style="display:grid;grid-template-columns:${gcols};gap:2px"><div></div>${YL.map((l) => `<div style="font-size:11px;color:var(--mut);text-align:center">${l}</div>`).join('')}</div>`;
+  top8.forEach((a) => {
+    tl += `<div style="display:grid;grid-template-columns:${gcols};gap:2px;align-items:center;border-top:1px solid var(--grid);height:34px"><div style="font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(a)}</div>`;
+    Y.forEach((y) => { const k = byYear.get(y).filter((b) => b.auteur === a).length, d = k ? 8 + 5 * k : 0;
+      tl += `<div style="display:flex;justify-content:center">${k ? `<span title="${esc(a)} · ${y} : ${k} livre${k > 1 ? 's' : ''}" style="width:${d}px;height:${d}px;border-radius:50%;background:var(--bar)"></span>` : ''}</div>`; });
+    tl += '</div>';
+  });
+  tl += '</div></div>';
+  cards.push(card('Fidélité aux auteurs', 'Pour les huit auteurs les plus lus, les années où tu les as lus. Plus le point est gros, plus il y a de livres cette année-là.', tl, true));
+
+  // women
+  const ws = Y.map((y) => { const yb = byYear.get(y); return Math.round(100 * yb.filter((b) => b.genre_auteur === 'femme').length / yb.length); });
+  const tw = B.filter((b) => b.genre_auteur === 'femme').length;
+  cards.push(card('Part des autrices', `Pourcentage de livres écrits par des femmes chaque année (${tw} au total, soit ${Math.round(100 * tw / B.length)} %). Les livres coécrits par un homme et une femme ne sont pas comptés.`,
+    vbars(YL, ws, { topv: Math.max(50, ...ws), tip: (l, v) => `${l} : ${v} % d’autrices` })));
+
+  // themes
+  const th = count(B.flatMap((b) => b.themes || []), (t) => t);
+  cards.push(card('Thèmes récurrents', 'Nombre de livres liés à chacun de tes centres d’intérêt.', hbars(topN(th, 20).map(([t, v]) => [t[0].toUpperCase() + t.slice(1), v]), { labw: 130, val: (v) => `${v} livres` })));
+
+  // age
+  const ages = B.filter((b) => b.annee_publication).map((b) => b.annee - b.annee_publication).sort((a, b) => a - b);
+  const ab = [[0, 1, 'même année'], [1, 2, '1 an'], [2, 6, '2–5 ans'], [6, 11, '6–10 ans'], [11, 26, '11–25 ans'], [26, 51, '26–50 ans'], [51, 1e9, '+ de 50 ans']];
+  const av = ab.map(([lo, hi]) => ages.filter((a) => a >= lo && a < hi).length);
+  cards.push(card('L’âge des livres', `Écart entre la première publication et ta lecture. La moitié des livres avaient ${ages[Math.floor(ages.length / 2)]} ans ou moins.`,
+    vbars(ab.map((x) => x[2]), av, { tip: (l, v) => `${l} : ${v} livres`, show: new Set(av.keys()) })));
+
+  // favourites
+  const gi = GROUPS.map(([g, c]) => { const tot = B.filter((b) => GROUP_OF[b.categorie] === g).length, f = favs.filter((b) => GROUP_OF[b.categorie] === g).length;
+    return [g, tot ? Math.round(100 * f / tot) : 0, c, ` (${f} sur ${tot})`]; }).sort((a, b) => b[1] - a[1]);
+  cards.push(card('Coups de cœur par catégorie', 'Part des livres de chaque catégorie que tu as marqués comme coups de cœur.', hbars(gi, { labw: 160, val: (v) => `${v} %` })));
+  const favList = '<div class="favlist">' + [...favs].sort((a, b) => b.annee - a.annee || b.mois - a.mois).map((b) =>
+    `<div><span class="dot" style="background:${COLOR[b.categorie]}" aria-hidden="true"></span><span class="serif">${esc(b.titre)}</span> <span style="color:var(--ink2)">· ${esc(b.auteur)} · ${b.annee}</span></div>`).join('') + '</div>';
+  cards.push(card(`Les ${favs.length} coups de cœur`, 'Du plus récent au plus ancien.', favList, true));
+
+  document.getElementById('view').innerHTML = `<div style="display:flex;flex-direction:column;gap:24px">${hero}<div class="cards">${mos}${cards.join('')}</div><p class="note">Les nombres de pages et les années de publication sont indicatifs. Survole une barre pour voir sa valeur exacte.</p></div>`;
+
+  // mosaic interaction
+  const showSel = () => {
+    const b = B.find((x) => x.id === state.sel) || lastB;
+    document.getElementById('mos-sel').innerHTML = `<div class="sw" style="background:${COLOR[b.categorie]}"></div>
+      <div style="flex:1 1 auto;min-width:0"><div class="serif" style="font-size:19px;font-weight:600">${esc(b.titre)}</div><div style="font-size:14px;color:var(--ink2)">${esc(b.auteur)}</div></div>
+      <div style="font-size:13px;color:#3E3A34;text-align:right;line-height:1.6">${esc(b.categorie)} · ≈ ${b.pages} p. · ${b.annee_publication || '—'}${b.coup_de_coeur ? ' · coup de cœur' : ''}<br>Lu en ${MOL[b.mois - 1]} ${b.annee} · ${b.langue_lue}${b.traduction ? ' (trad.)' : ' (VO)'}</div>`;
+  };
+  if (state.sel == null) state.sel = lastB.id;
+  showSel();
+  document.querySelectorAll('.tile').forEach((t) => t.onclick = () => {
+    document.querySelectorAll('.tile.on').forEach((x) => x.classList.remove('on'));
+    t.classList.add('on'); state.sel = +t.dataset.id; showSel();
+  });
+}
+
+// ---------- boot ----------
+fetch('lectures.json', { cache: 'no-cache' })
+  .then((r) => { if (!r.ok) throw new Error(r.status); return r.json(); })
+  .then((d) => {
+    BOOKS = d.livres;
+    const f = BOOKS.reduce((a, b) => (a.annee * 12 + a.mois <= b.annee * 12 + b.mois ? a : b));
+    const favN = BOOKS.filter((b) => b.coup_de_coeur).length;
+    document.getElementById('subtitle').textContent = `${BOOKS.length} livres depuis ${MOL[f.mois - 1]} ${f.annee}, dont ${favN} coups de cœur`;
+    route();
+  })
+  .catch((e) => {
+    document.getElementById('subtitle').textContent = '';
+    document.getElementById('view').innerHTML = `<p class="empty">Impossible de charger lectures.json (${esc(e.message)}). Si tu ouvres la page en local, lance un petit serveur : <code>python3 -m http.server</code>.</p>`;
+  });
+</script>
+</body>
+</html>
